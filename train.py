@@ -1,15 +1,22 @@
 import os
+
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 os.environ["OMP_NUM_THREADS"] = "4"
 # os.environ["NCCL_DEBUG"]="INFO"
 # os.environ["NCCL_DEBUG_SUBSYS"]="ALL"
 # os.environ["TORCH_DISTRIBUTED_DEBUG"]="INFO"
 import random
-
-import torch
-import numpy as np
+import sys
+import argparse
 
 import toml
+import numpy as np
+import torch
+from torch.cuda.amp import GradScaler
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+
+
 from src.color_conversion import color_augmentations
 
 from src.multi_head_unet import get_model, load_checkpoint
@@ -22,16 +29,11 @@ from src.train_utils import (
 from src.validation import validation
 from src.data_utils import get_data
 from src.focal_loss import FocalLoss
-from torch.cuda.amp import GradScaler
 
-# import torch_optimizer as optim
-import torch.distributed as dist
 
 dist.init_process_group("nccl")
-from torch.nn.parallel import DistributedDataParallel as DDP
-import sys
-
-import argparse
+torch.backends.cudnn.benchmark = True
+torch.manual_seed(42)
 
 
 def newest(path):
@@ -42,16 +44,15 @@ def newest(path):
     return max(paths, key=os.path.getctime)
 
 
-torch.backends.cudnn.benchmark = True
-
-torch.manual_seed(42)
-
-
 def supervised_training(params):
+    # initialize environment
+    torch.set_num_threads(params["num_workers"])
     validation_loss = []
     rank = int(os.environ["LOCAL_RANK"])
     world_size = int(os.environ["LOCAL_WORLD_SIZE"])
     print(rank, flush=True)
+
+    # build model and retrieve weights
     model = get_model(
         enc=params["encoder"],
         out_channels_cls=params["out_channels_cls"],
@@ -69,6 +70,7 @@ def supervised_training(params):
 
     ddp_model = DDP(model)
 
+    # setup training
     optimizer = torch.optim.AdamW(
         ddp_model.parameters(),
         lr=params["learning_rate"],
@@ -92,10 +94,13 @@ def supervised_training(params):
     ce_loss_fn = FocalLoss(alpha=None, gamma=params["fl_gamma"], reduction="mean").to(
         rank
     )
-
     inst_loss_fn = get_inst_loss_fn(params)
+
+    # setup augmentation functions
     color_aug_fn = color_augmentations(True, s=params["color_scale"], rank=rank)
     fast_aug = SpatialAugmenter(params["aug_params_fast"])
+
+    # load data
     train_dataloaders, validation_dataloader, sz, dist_samp, class_names = get_data(
         params
     )
@@ -109,6 +114,7 @@ def supervised_training(params):
     # for debugging
     na_steps = []
 
+    # train loop
     while step < params["training_steps"]:
         train_loaders = [iter(x) for x in train_dataloaders]
         for _ in range(sz):
@@ -196,7 +202,6 @@ def main(params):
 
 
 if __name__ == "__main__":
-    
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--id",
@@ -216,8 +221,6 @@ if __name__ == "__main__":
 
     params = toml.load(args.config)
     params["experiment"] = params["experiment"] + "_" + str(params["fold"])
-    
-    
 
     if int(args.id) > 1:
         params["checkpoint_path"] = newest(params["experiment"] + "/train/")
