@@ -18,3 +18,7 @@ then, run:
 
 Follow along the pannuke code and replace hyperparameters and necessary preprocessing steps along the way.
 Data should always be in the same format, see convert_pannuke_to_conic.py.
+## Whole slide Inference
+
+Please check the inference repository for WSI/large image inference:
+https://github.com/digitalpathologybern/hover_next_train
