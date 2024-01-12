@@ -1,6 +1,9 @@
-import numpy as np
 import os
+import json
 import cv2
+import numpy as np
+from tqdm.auto import tqdm
+import pandas as pd
 
 # import mahotas as mh
 from scipy.ndimage import find_objects
@@ -12,8 +15,8 @@ from src.constants import (
     MIN_THRESHS_PANNUKE,
     MAX_THRESHS_PANNUKE,
 )
-from tqdm.auto import tqdm
-import json
+
+
 from scipy.special import softmax
 from skimage.segmentation import watershed
 from pannuke_metrics_master.variant import get_pannuke_pq
@@ -128,6 +131,7 @@ def evaluate(
     best_fg_thresh_cl,
     best_seed_thresh_cl,
     params,
+    criterium="lizard",
     nclasses=6,
     class_names=CLASS_NAMES,
     save_path=None,
@@ -172,63 +176,73 @@ def evaluate(
     for key in pred_regression.keys():
         pred_regression[key] = np.array(pred_regression[key])
 
-    mpq_list = None
-    r2_list = None
-    mdict = None
-    pan_pq_list, pan_tiss = None, None, None
-    if params["eval_criteria"] != "":
-        for m in params["eval_criteria"].split("|"):
-            if m == "lizard":
-                print("running conic metrics")
-                df, mpq_list = calc_MPQ(pred_list, gt_list, nclasses)
-                pq = df["pq"].values
-                _, r2_list = get_multi_r2(
-                    gt_regression, pred_regression, class_names[:nclasses]
-                )
-                if save_path is not None:
-                    with open(
-                        os.path.join(save_path[0], save_path[1] + "_pq.json"), "w"
-                    ) as js:
-                        json.dump(
-                            {
-                                "pq": np.squeeze(df["pq"].values).tolist(),
-                                "mpq": np.squeeze(df["multi_pq+"].values).tolist(),
-                                "mpq_list": list(mpq_list),
-                                "r2_list": list(r2_list),
-                            },
-                            js,
-                        )
-            elif m == "alt":
-                print("running tile metrics")
-                ccrop = params["alt_metric_ccrop"]  # 256 if pannuke else 248
-                metrics = per_tile_metrics(
-                    crop(gt_list, ccrop, ccrop),
-                    crop(np.stack(pred_list, axis=0), ccrop, ccrop),
-                    class_names[:nclasses],
-                    match_euc_dist=params["match_euc_dist"],  # 12 if pannuke else 6,
-                )
-                _, mdict = get_output(
-                    metrics,
-                    save_path,
-                    class_names[:nclasses],
-                )
-            elif m == "pannuke":
-                _, pan_bpq, pan_pq_list, pan_tiss = get_pannuke_pq(
-                    gt_list, pred_list, types
-                )
-            else:
-                raise NotImplementedError("metric variation not implemented")
-    return (
-        mpq_list,
-        r2_list,
-        pred_list,
-        pred_regression,
-        mdict,
-        pq,
-        pan_bpq,
-        pan_pq_list,
-        pan_tiss,
+    mpq_list, r2_list, mdict, pq, pan_bpq, pan_pq_list, pan_tiss = (
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
     )
+    # if params["eval_criteria"] != "":
+    # for m in params["eval_criteria"].split("|"):
+    if criterium == "lizard":
+        print("running conic metrics")
+        df, mpq_list = calc_MPQ(pred_list, gt_list, nclasses)
+        pq = df["pq"].values
+        _, r2_list = get_multi_r2(
+            gt_regression, pred_regression, class_names[:nclasses]
+        )
+        if save_path is not None:
+            with open(os.path.join(save_path[0], save_path[1] + "_pq.json"), "w") as js:
+                json.dump(
+                    {
+                        "pq": np.squeeze(df["pq"].values).tolist(),
+                        "mpq": np.squeeze(df["multi_pq+"].values).tolist(),
+                        "mpq_list": list(mpq_list),
+                        "r2_list": list(r2_list),
+                    },
+                    js,
+                )
+        return {
+            "optim": mpq_list,
+            "r2": r2_list,
+            "pq": pq,
+        }
+    elif criterium == "alt":
+        print("running tile metrics")
+        ccrop = params["alt_metric_ccrop"]  # 256 if pannuke else 248
+        metrics = per_tile_metrics(
+            crop(gt_list, ccrop, ccrop),
+            crop(np.stack(pred_list, axis=0), ccrop, ccrop),
+            class_names[:nclasses],
+            match_euc_dist=params["match_euc_dist"],  # 12 if pannuke else 6,
+        )
+        _, mdict = get_output(
+            metrics,
+            save_path,
+            class_names[:nclasses],
+        )
+        return {
+            "optim": pd.DataFrame(mdict["count_metrics"])
+            .set_index("class")
+            .loc[class_names[:nclasses], "F1"]
+            .values,
+            "hd": pd.DataFrame(mdict["class_wise_seg_metrics"])
+            .set_index("class")
+            .loc[class_names[:nclasses], "seg_hausdorff_(TP)"]
+            .values,
+        }
+    elif criterium == "pannuke":
+        _, pan_bpq, pan_pq_list, pan_tiss = get_pannuke_pq(gt_list, pred_list, types)
+        return {
+            "optim": pan_pq_list,
+            "bpq": pan_bpq,
+            "tiss": pan_tiss,
+        }
+    else:
+        raise NotImplementedError("metric variation not implemented")
 
 
 def make_instance_segmentation_cl(

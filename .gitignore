@@ -157,3 +157,5 @@ test.ipynb
 *.sh
 *.out
 sample_configs/train_pannuke_fold3.toml
+pannuke_convnextv2_tinyv2_3/*
+pannuke_convnextv2_tinyv2_2/*

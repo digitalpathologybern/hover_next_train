@@ -52,204 +52,63 @@ def find_hyperparameters(ds, models, name, nclasses=7, class_names=CLASS_NAMES, 
     )
     gt_regression = prep_regression(gt_list, nclasses=nclasses, class_names=class_names)
     print("searching best fg threshold")
+    out_dict = {}
+    if params["eval_criteria"] != "":
+        for criterium in params["eval_criteria"].split("|"):
+            if params["dataset"] == "pannuke":
+                best_fg_thresh_cl = [0.5] * nclasses
+                best_seed_thresh_cl = [0.3] * nclasses
+            else:
+                best_fg_thresh_cl = [0.47, 0.57, 0.62, 0.64, 0.52, 0.49, 0.55]
+                best_seed_thresh_cl = [0.24, 0.48, 0.42, 0.58, 0.72, 0.28, 0.42]
 
-    if params["pannuke"]:
-        best_fg_thresh_cl = [0.5] * nclasses
-        best_seed_thresh_cl = [0.3] * nclasses
-    else:
-        best_fg_thresh_cl = [0.47, 0.57, 0.62, 0.64, 0.52, 0.49, 0.55]
-        best_seed_thresh_cl = [0.24, 0.48, 0.42, 0.58, 0.72, 0.28, 0.42]
+            optim_list_global = []
+            fg_threshs = np.linspace(0.1, 0.9, 9)
+            for fg_thresh in fg_threshs:
+                print("FG:", fg_thresh)
+                eval_dict = evaluate(
+                    pred_emb_list,
+                    pred_class_list,
+                    gt_regression,
+                    gt_list,
+                    [fg_thresh] * nclasses,
+                    best_seed_thresh_cl,
+                    params,
+                    criterium,
+                    nclasses,
+                    class_names,
+                )
+                optim_list_global.append(eval_dict["optim"])
 
-    mpq_list_global = []
-    r2_list_global = []
-    f1_list_global = []
-    hd_list_global = []
-    fg_threshs = np.linspace(0.1, 0.9, 9)
-    for fg_thresh in fg_threshs:
-        print("FG:", fg_thresh)
-        (
-            mpq_list,
-            r2_list,
-            pred_list,
-            pred_regression,
-            mdict,
-            pq,
-            pan_bpq,
-            pan_pq_list,
-            pan_tiss,
-        ) = evaluate(
-            pred_emb_list,
-            pred_class_list,
-            gt_regression,
-            gt_list,
-            [fg_thresh] * nclasses,
-            best_seed_thresh_cl,
-            params,
-            nclasses,
-            class_names,
-        )
-        mpq_list_global.append(mpq_list)
-        r2_list_global.append(r2_list)
-        f1_list_global.append(
-            pd.DataFrame(mdict["count_metrics"])
-            .set_index("class")
-            .loc[class_names[:nclasses], "F1"]
-            .values
-        )
-        hd_list_global.append(
-            pd.DataFrame(mdict["class_wise_seg_metrics"])
-            .set_index("class")
-            .loc[class_names[:nclasses], "seg_hausdorff_(TP)"]
-            .values
-        )
+            best_idx = np.stack(optim_list_global)
+            best_fg_thresh_cl = [fg_threshs[i] for i in best_idx.argmax(0)]
+            out_dict[f"best_fg_{criterium}"] = best_fg_thresh_cl
+            optim_list_global = []
 
-    # mpq
-    best_idx = np.stack(mpq_list_global)
-    best_fg_thresh_cl = [fg_threshs[i] for i in best_idx.argmax(0)]
-    # r2
-    best_idx_r2 = np.stack(r2_list_global)
-    best_fg_thresh_cl_r2 = [fg_threshs[i] for i in best_idx_r2.argmax(0)]
+            print("searching best seed threshold")
 
-    # f1
-    best_idx_f1 = np.stack(f1_list_global)
-    best_fg_thresh_cl_f1 = [fg_threshs[i] for i in best_idx_f1.argmax(0)]
-    # hd
-    best_idx_hd = np.stack(hd_list_global)
-    best_fg_thresh_cl_hd = [fg_threshs[i] for i in best_idx_hd.argmin(0)]
-
-    out_dict = {
-        "best_fg_mpq": best_fg_thresh_cl,
-        "best_fg_r2": best_fg_thresh_cl_r2,
-        "best_fg_f1": best_fg_thresh_cl_f1,
-        "best_fg_hd": best_fg_thresh_cl_hd,
-    }
-    for c, i in enumerate(fg_threshs):
-        out_dict[f"fg_{i}_mpq"] = best_idx[c].tolist()
-        out_dict[f"fg_{i}_r2"] = best_idx_r2[c].tolist()
-        out_dict[f"fg_{i}_f1"] = best_idx_f1[c].tolist()
-        out_dict[f"fg_{i}_hd"] = best_idx_hd[c].tolist()
-
-    print("searching best seed threshold")
-
-    mpq_list_global = []
-    r2_list_global = []
-    f1_list_global = []
-    hd_list_global = []
-    # seed_threshs = np.linspace(0.2,0.8,61)
-
-    seed_threshs = np.linspace(0.1, 0.9, 9)
-    for seed_thresh in seed_threshs:
-        seed_thresh = [seed_thresh] * nclasses
-        (
-            mpq_list,
-            r2_list,
-            pred_list,
-            pred_regression,
-            mdict,
-            pq,
-            pan_bpq,
-            pan_pq_list,
-            pan_tiss,
-        ) = evaluate(
-            pred_emb_list,
-            pred_class_list,
-            gt_regression,
-            gt_list,
-            best_fg_thresh_cl,
-            seed_thresh,
-            params,
-            nclasses,
-            class_names,
-        )
-        mpq_list_global.append(mpq_list)
-        r2_list_global.append(r2_list)
-        f1_list_global.append(
-            pd.DataFrame(mdict["count_metrics"])
-            .set_index("class")
-            .loc[class_names[:nclasses], "F1"]
-            .values
-        )
-        hd_list_global.append(
-            pd.DataFrame(mdict["class_wise_seg_metrics"])
-            .set_index("class")
-            .loc[class_names[:nclasses], "seg_hausdorff_(TP)"]
-            .values
-        )
-
-    best_idx = np.stack(mpq_list_global)
-    best_seed_thresh_cl = [seed_threshs[i] for i in best_idx.argmax(0)]
-
-    # r2
-    best_idx_r2 = np.stack(r2_list_global)
-    best_seed_thresh_cl_r2 = [seed_threshs[i] for i in best_idx_r2.argmax(0)]
-    # f1
-    best_idx_f1 = np.stack(f1_list_global)
-    best_seed_cl_f1 = [seed_threshs[i] for i in best_idx_f1.argmax(0)]
-    # hd
-    best_idx_hd = np.stack(hd_list_global)
-    best_seed_cl_hd = [seed_threshs[i] for i in best_idx_hd.argmin(0)]
-
-    # calculate best mPQ and r2
-    mpq_list_global_stack = np.stack(mpq_list_global)
-    best_mpq = np.array(
-        [
-            mpq[i]
-            for i, mpq in zip(best_idx.argmax(0), np.transpose(mpq_list_global_stack))
-        ]
-    )
-
-    r2_list_global_stack = np.stack(r2_list_global)
-    best_r2 = np.array(
-        [
-            r2[i]
-            for i, r2 in zip(best_idx_r2.argmax(0), np.transpose(r2_list_global_stack))
-        ]
-    )
-
-    f1_list_global_stack = np.stack(f1_list_global)
-    best_f1 = np.array(
-        [
-            f1[i]
-            for i, f1 in zip(best_idx_f1.argmax(0), np.transpose(f1_list_global_stack))
-        ]
-    )
-
-    hd_list_global_stack = np.stack(hd_list_global)
-    best_hd = np.array(
-        [
-            hd[i]
-            for i, hd in zip(best_idx_hd.argmin(0), np.transpose(hd_list_global_stack))
-        ]
-    )
-
-    out_dict["best_seed_mpq"] = best_seed_thresh_cl
-    out_dict["best_seed_r2"] = best_seed_thresh_cl_r2
-    out_dict["best_seed_f1"] = best_seed_cl_f1
-    out_dict["best_seed_hd"] = best_seed_cl_hd
-
-    out_dict["best_r2_overall"] = np.mean(best_r2)
-    out_dict["best_mpq_overall"] = np.mean(best_mpq)
-    out_dict["best_f1_overall"] = np.mean(best_f1)
-    out_dict["best_hd_overall"] = np.mean(best_hd)
-
-    for c, i in enumerate(seed_threshs):
-        out_dict[f"seed_{i}_mpq"] = best_idx[c].tolist()
-        out_dict[f"seed_{i}_r2"] = best_idx_r2[c].tolist()
-        out_dict[f"seed_{i}_f1"] = best_idx_f1[c].tolist()
-        out_dict[f"seed_{i}_hd"] = best_idx_hd[c].tolist()
-
-    print("r2")
-    print(best_seed_thresh_cl_r2)
-    print(best_fg_thresh_cl_r2)
-    print("mpq")
-    print(best_seed_thresh_cl)
-    print(best_fg_thresh_cl)
-    print("f1")
-    print(best_seed_cl_f1)
-    print(best_fg_thresh_cl_f1)
-    print("hd")
-    print(best_seed_cl_hd)
-    print(best_fg_thresh_cl_hd)
+            seed_threshs = np.linspace(0.1, 0.9, 9)
+            for seed_thresh in seed_threshs:
+                seed_thresh = [seed_thresh] * nclasses
+                eval_dict = evaluate(
+                    pred_emb_list,
+                    pred_class_list,
+                    gt_regression,
+                    gt_list,
+                    [fg_thresh] * nclasses,
+                    best_seed_thresh_cl,
+                    params,
+                    criterium,
+                    nclasses,
+                    class_names,
+                )
+                optim_list_global.append(eval_dict["optim"])
+            best_idx = np.stack(optim_list_global)
+            best_seed_thresh_cl = [seed_threshs[i] for i in best_idx.argmax(0)]
+            out_dict[f"best_seed_{criterium}"] = best_seed_thresh_cl
+            print(criterium)
+            print(best_fg_thresh_cl)
+            print(best_seed_thresh_cl)
 
     with open(os.path.join(params["experiment"], name + "_param_dict.json"), "w") as f:
         json.dump(out_dict, f)
@@ -266,18 +125,14 @@ def main(nclasses, params, rank=0):
     model, _, _ = load_checkpoint(model, cp_path, rank=0)
     model.eval()
     if params["dataset"] == "pannuke":
-        _, test_f = PANNUKE_FOLDS[fold - 1]
+        _, test_f = PANNUKE_FOLDS[int(params["fold"]) - 1]
         i = test_f + 1
         raw_fold = np.load(
-            os.path.join(
-                params["data_path_pannuke"], "images", "fold" + str(i), "images.npy"
-            ),
+            os.path.join(params["data_path"], "images", "fold" + str(i), "images.npy"),
             mmap_mode="r",
         )
         gt_fold = np.load(
-            os.path.join(
-                params["data_path_pannuke"], "masks", "fold" + str(i), "labels.npy"
-            ),
+            os.path.join(params["data_path"], "masks", "fold" + str(i), "labels.npy"),
             mmap_mode="r",
         )
         ds_list = [SliceDataset(raw=raw_fold, labels=gt_fold)]
@@ -309,15 +164,20 @@ def main(nclasses, params, rank=0):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-exp",
+        "--config",
         type=str,
         default=None,
-        help="experiment name, specify with fold e.g. test_experiment_1",
+        help="path to .toml file of experiment. e.g. lizard_exp_1/params.toml",
+    )
+    parser.add_argument(
+        "--checkpoint",
+        type=str,
+        default="best_model",
+        help="checkpoint to load. e.g. best_model, checkpoint_step_10000. Use this to evaluate other checkpoints",
     )
     args = parser.parse_args()
-    params = toml.load(f"{args.exp}/params.toml")
-    fold = int(params["fold"])
-
-    rank = 0  # ignoring that you might not want to use gpu:0 or cpu instead :)
+    params = toml.load(args.config)
+    params["checkpoint_path"] = args.checkpoint
+    rank = torch.cuda.current_device()
     nclasses = 5 if params["dataset"] == "pannuke" else 7
     main(nclasses, params, rank)
