@@ -132,8 +132,7 @@ def supervised_training(params):
                 inst_loss_fn,
                 ce_loss_fn,
                 rank,
-                inst_channels=params["inst_channels"],
-                use_amp=True,
+                params,
             )
             if not torch.isfinite(loss):
                 na_steps.append(1)

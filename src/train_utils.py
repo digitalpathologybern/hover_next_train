@@ -18,16 +18,7 @@ def save_model(step, model, optimizer, loss, best_loss, filename):
 
 
 def supervised_train_step(
-    model,
-    raw,
-    gt,
-    fast_aug,
-    color_aug_fn,
-    inst_lossfn,
-    class_lossfn,
-    device,
-    inst_channels,
-    use_amp=True,
+    model, raw, gt, fast_aug, color_aug_fn, inst_lossfn, class_lossfn, device, params
 ):
     raw = raw.to(device).float().permute(0, 3, 1, 2)
     gt = gt.to(device).float().permute(0, 3, 1, 2)
@@ -43,21 +34,26 @@ def supervised_train_step(
         gt_3c = gt_saug[:, 2]
     img_caug = torch.clamp(color_aug_fn(img_saug), 0, 1)
 
-    with torch.autocast(device_type="cuda", dtype=torch.float16, enabled=use_amp):
+    with torch.autocast(
+        device_type="cuda", dtype=torch.float16, enabled=params["use_amp"]
+    ):
         out_fast = model(img_caug)
         _, _, H, W = out_fast.shape
 
         gt_inst = center_crop(gt_inst, H, W)
         gt_ct = center_crop(gt_ct, H, W)
 
-        pred_inst = out_fast[:, :inst_channels]
-        pred_class = out_fast[:, inst_channels:]
+        pred_inst = out_fast[:, : params["inst_channels"]]
+        pred_class = out_fast[:, params["inst_channels"] :]
 
         # gt_3c = torch.cat(gt_3c_list, axis=0)
         gt_3c = center_crop(gt_3c, H, W)
         instance_loss = inst_lossfn(pred_inst, gt_inst, gt_3c)
         class_loss = class_lossfn(pred_class, gt_ct.long())
-        loss = instance_loss + class_loss
+        loss = (
+            params["loss_lambda"] * instance_loss
+            + (1 - params["loss_lambda"]) * class_loss
+        )
     print("inst_loss: ", instance_loss.item(), "class_loss: ", class_loss.item())
     return loss
 

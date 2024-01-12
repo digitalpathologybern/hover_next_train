@@ -22,6 +22,7 @@ training_steps = 200000
 validation_step = 1000
 checkpoint_step = 10000
 fl_gamma = 2
+loss_lambda = 0.1
 
 # Evaluation parameters
 tta = 16
@@ -48,6 +49,7 @@ optim_metric = "mpq" # metric to optimize model for, one of [f1, mpq, pannuke]
 # Environment setup
 
 num_workers = 4
+use_amp = true
 
 # Augmentation parameters
 color_scale = 0.4 # simplified multiple parameters by including a scaling factor to increase or reduce augmentation
