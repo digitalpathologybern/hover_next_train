@@ -51,21 +51,16 @@ def find_hyperparameters(ds, models, name, nclasses=7, class_names=CLASS_NAMES, 
         data_loader, models, aug, color_aug_fn, params["tta"], rank=rank
     )
     gt_regression = prep_regression(gt_list, nclasses=nclasses, class_names=class_names)
-    print("searching best fg threshold")
+
     out_dict = {}
     if params["eval_criteria"] != "":
         for criterium in params["eval_criteria"].split("|"):
-            if params["dataset"] == "pannuke":
-                best_fg_thresh_cl = [0.5] * nclasses
-                best_seed_thresh_cl = [0.3] * nclasses
-            else:
-                best_fg_thresh_cl = [0.47, 0.57, 0.62, 0.64, 0.52, 0.49, 0.55]
-                best_seed_thresh_cl = [0.24, 0.48, 0.42, 0.58, 0.72, 0.28, 0.42]
-
+            print("searching best fg threshold", flush=True)
+            best_seed_thresh_cl = [0.3] * nclasses
             optim_list_global = []
             fg_threshs = np.linspace(0.1, 0.9, 9)
             for fg_thresh in fg_threshs:
-                print("FG:", fg_thresh)
+                print("FG:", fg_thresh, flush=True)
                 eval_dict = evaluate(
                     pred_emb_list,
                     pred_class_list,
@@ -85,18 +80,18 @@ def find_hyperparameters(ds, models, name, nclasses=7, class_names=CLASS_NAMES, 
             out_dict[f"best_fg_{criterium}"] = best_fg_thresh_cl
             optim_list_global = []
 
-            print("searching best seed threshold")
+            print("searching best seed threshold", flush=True)
 
             seed_threshs = np.linspace(0.1, 0.9, 9)
             for seed_thresh in seed_threshs:
-                seed_thresh = [seed_thresh] * nclasses
+                print("Seed:", seed_thresh, flush=True)
                 eval_dict = evaluate(
                     pred_emb_list,
                     pred_class_list,
                     gt_regression,
                     gt_list,
-                    [fg_thresh] * nclasses,
-                    best_seed_thresh_cl,
+                    best_fg_thresh_cl,
+                    [seed_thresh] * nclasses,
                     params,
                     criterium,
                     nclasses,
@@ -177,6 +172,12 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     params = toml.load(args.config)
+    print(
+        "loaded config for",
+        params["experiment"],
+        "starting hyperparameter search...",
+        flush=True,
+    )
     params["checkpoint_path"] = args.checkpoint
     rank = torch.cuda.current_device()
     nclasses = 5 if params["dataset"] == "pannuke" else 7

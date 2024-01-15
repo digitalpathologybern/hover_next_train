@@ -159,3 +159,12 @@ test.ipynb
 sample_configs/train_pannuke_fold3.toml
 pannuke_convnextv2_tinyv2_3/*
 pannuke_convnextv2_tinyv2_2/*
+investigate_pannuke.ipynb
+pannuke_convnextv2_tinyv3_1/*
+pannuke_convnextv2_tinyv3_2/*
+pannuke_convnextv2_tinyv3_3/*
+pannuke_convnextv2_largev3_1/*
+pannuke_convnextv2_largev3_2/*
+pannuke_convnextv2_largev3_3/*
+lizard_convnextv2_tiny_0/*
+sample_configs/train_pannuke_fold1.toml

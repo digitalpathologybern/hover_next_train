@@ -14,7 +14,6 @@ from scipy.spatial.distance import directed_hausdorff
 import math
 import cv2
 import json
-from tqdm.auto import tqdm
 import pandas as pd
 from concurrent.futures import ProcessPoolExecutor
 import concurrent.futures
@@ -37,7 +36,10 @@ def remap_label(pred, by_size=False):
         new_pred (ndarray): Array with continguous ordering of instances.
     """
     pred_id = list(np.unique(pred))
-    pred_id.remove(0)
+    try:
+        pred_id.remove(0)
+    except ValueError:
+        pass
     if len(pred_id) == 0:
         return pred  # no label
     if by_size:
@@ -334,7 +336,7 @@ def calc_MPQ(pred_list, gt_list, nclasses=6):
 
         nr_patches = pred_array.shape[0]
 
-        for patch_idx in tqdm(range(nr_patches)):
+        for patch_idx in range(nr_patches):
             # get a single patch
             pred = pred_array[patch_idx]
             true = true_array[patch_idx]
@@ -710,7 +712,7 @@ def per_tile_metrics(gt, pred, class_names, match_euc_dist=6):
             )
         res = [
             future.result()
-            for future in tqdm(concurrent.futures.as_completed(future_metrics))
+            for future in concurrent.futures.as_completed(future_metrics)
         ]
     res = [i for i in sorted(res, key=lambda x: x[0]["id"])]
     for i in res:

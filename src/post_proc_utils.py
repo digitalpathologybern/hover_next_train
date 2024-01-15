@@ -2,7 +2,6 @@ import os
 import json
 import cv2
 import numpy as np
-from tqdm.auto import tqdm
 import pandas as pd
 
 # import mahotas as mh
@@ -72,7 +71,7 @@ def prep_regression(gt_list, nclasses=6, class_names=CLASS_NAMES):
     for i in range(nclasses):
         gt_regression[cns[i]] = []
 
-    for gt in tqdm(gt_list):
+    for gt in gt_list:
         gt_inst, gt_ct = gt[..., 0], gt[..., 1]
         ct_list = np.zeros(nclasses + 1)
         instance_map_tmp = center_crop(gt_inst, 224, 224)
@@ -145,16 +144,14 @@ def evaluate(
 
     # max_hole_size = 128 if pannuke else 50
     min_threshs = (
-        MIN_THRESHS_PANNUKE if params["dataset"] == "pannuke" else BEST_MIN_THRESHS
+        [0, 0, 0, 0, 0] if params["dataset"] == "pannuke" else BEST_MIN_THRESHS
     )
     max_threshs = (
         MAX_THRESHS_PANNUKE if params["dataset"] == "pannuke" else BEST_MAX_THRESHS
     )
 
     res = []
-    for i, (pred_3c, pred_class) in tqdm(
-        enumerate(zip(pred_emb_list, pred_class_list)), total=len(pred_emb_list)
-    ):
+    for i, (pred_3c, pred_class) in enumerate(zip(pred_emb_list, pred_class_list)):
         ri, pred_inst, pred_reg = process_tile(
             i,
             pred_3c,

@@ -59,6 +59,8 @@ def supervised_train_step(
 
 
 def get_inst_loss_fn(params):
+    # Pannuke training seems to require a slightly different loss setup for good results,
+    # though lizard works fine with pannuke loss as well
     if params["dataset"] == "lizard":
         return inst_loss_fn_lizard
     elif params["dataset"] == "pannuke":
@@ -82,12 +84,11 @@ def inst_loss_fn_lizard(input, gt_inst, gt_3c):
 
 def inst_loss_fn_pannuke(input, gt_inst, gt_3c):
     gt_cpv = parallel_cpvs(gt_inst.to("cpu")).to(gt_inst.device)
-    loss_cpv = F.l1_loss(input=input[:, :2], target=gt_cpv)
+    loss_cpv = F.smooth_l1_loss(input=input[:, :2], target=gt_cpv)
     loss_3c = F.cross_entropy(
         input=input[:, 2:],
         target=gt_3c.long(),
         weight=torch.tensor([1, 1, 2]).type_as(input).to(input.device),
-        label_smoothing=0.2,
+        label_smoothing=0.1,
     )
-    # loss_dice = dice_loss(input[:, 2:], gt_3c.long())
-    return loss_cpv + loss_3c  # + loss_dice
+    return loss_cpv + loss_3c

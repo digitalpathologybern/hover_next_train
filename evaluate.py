@@ -223,7 +223,7 @@ def main(nclasses, class_names, cp_paths, rank=0):
     ds_names = []
     fold = params["fold"]
     types_fold = None
-    if params["pannuke"]:
+    if params["dataset"] == "pannuke":
         _, test_f = PANNUKE_FOLDS[fold - 1]
         i = test_f + 1
         raw_fold = np.load(
@@ -353,5 +353,5 @@ if __name__ == "__main__":
     params["experiment"] = "_".join(args.exp.split(","))
     class_names = CLASS_NAMES_PANNUKE if params["pannuke"] else CLASS_NAMES
     rank = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    nclasses = 5 if params["pannuke"] else 7
-    main(nclasses, class_names, args.experiments.split(","), rank)
+    nclasses = 5 if params["dataset"] == "pannuke" else 7
+    main(nclasses, class_names, args.exp.split(","), rank)
