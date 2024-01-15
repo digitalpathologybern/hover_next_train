@@ -612,24 +612,26 @@ def per_tile_worker(cnt, gt_tile, pred_tile, match_euc_dist, class_names):
 
     sub_metrics = []
     for cls in np.arange(1, len(class_names) + 1):
+        tp_hd = np.NaN
+        tp_dice = np.NaN
+        tp_mcc = np.NaN
         try:
             t = class_pairs[:, 0] == cls
             p = class_pairs[:, 1] == cls
             t_n = class_pairs[:, 0] != cls
             p_n = class_pairs[:, 1] != cls
 
-            tp_hd = np.nanmean(paired_hd[t & p])
-            tp_dice = np.nanmean(paired_dice[t & p])
-            tp_mcc = np.nanmean(paired_mcc[t & p])
             tp_c = np.count_nonzero(t & p)
+            if tp_c > 0:
+                tp_hd = np.nanmean(paired_hd[t & p])
+                tp_dice = np.nanmean(paired_dice[t & p])
+                tp_mcc = np.nanmean(paired_mcc[t & p])
+
             fp_c = np.count_nonzero(t_n & p) + np.count_nonzero(add_fp == cls)
             fn_c = np.count_nonzero(t & p_n) + np.count_nonzero(add_fn == cls)
             tn_c = np.count_nonzero(t_n & p_n)
         except IndexError:
             # fix no match for any class
-            tp_hd = np.NaN
-            tp_dice = np.NaN
-            tp_mcc = np.NaN
             tp_c = 0
             fp_c = np.count_nonzero(add_fp == cls)
             fn_c = np.count_nonzero(add_fn == cls)

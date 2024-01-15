@@ -55,7 +55,7 @@ def find_hyperparameters(ds, models, name, nclasses=7, class_names=CLASS_NAMES, 
     out_dict = {}
     if params["eval_criteria"] != "":
         for criterium in params["eval_criteria"].split("|"):
-            print("searching best fg threshold", flush=True)
+            print(criterium, "| searching best fg threshold", flush=True)
             best_seed_thresh_cl = [0.3] * nclasses
             optim_list_global = []
             fg_threshs = np.linspace(0.1, 0.9, 9)
@@ -80,7 +80,7 @@ def find_hyperparameters(ds, models, name, nclasses=7, class_names=CLASS_NAMES, 
             out_dict[f"best_fg_{criterium}"] = best_fg_thresh_cl
             optim_list_global = []
 
-            print("searching best seed threshold", flush=True)
+            print(criterium, "| searching best seed threshold", flush=True)
 
             seed_threshs = np.linspace(0.1, 0.9, 9)
             for seed_thresh in seed_threshs:
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     print(
         "loaded config for",
         params["experiment"],
-        "starting hyperparameter search...",
+        "\n starting hyperparameter search...",
         flush=True,
     )
     params["checkpoint_path"] = args.checkpoint

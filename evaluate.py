@@ -153,7 +153,7 @@ def evaluate_tile_dataset(
     models,
     dsname,
     experiments,
-    nrounds=5,
+    params,
     nclasses=7,
     class_names=CLASS_NAMES,
     rank=0,
@@ -177,20 +177,23 @@ def evaluate_tile_dataset(
     )
 
     res = []
-    gt_regression = prep_regression(gt_list, nclasses=nclasses, class_names=class_names)
-    for i in range(nrounds):
+
+    for i in range(params["n_rounds"]):
         print(f"round {i}")
 
         pred_emb_list, pred_class_list, gt_list, raw_list = run_inference(
             data_loader, models, aug, color_aug_fn, tta=params["tta"], rank=rank
         )
+        if i == 0:
+            gt_regression = prep_regression(
+                gt_list, nclasses=nclasses, class_names=class_names
+            )
         (
             mpq_list,
             r2_list,
-            pred_list,
-            _,
-            mdict,
             pq,
+            pred_list,
+            mdict,
             pan_bpq,
             pan_pq_list,
             pan_tiss,
@@ -202,6 +205,7 @@ def evaluate_tile_dataset(
             best_fg_thresh_cl,
             best_seed_thresh_cl,
             params,
+            "all",
             nclasses,
             class_names,
             types=types,
@@ -216,7 +220,7 @@ def evaluate_tile_dataset(
     process_and_save(res, out_p, dsname, tta=params["tta"], class_names=class_names)
 
 
-def main(nclasses, class_names, cp_paths, rank=0):
+def main(nclasses, class_names, cp_paths, params, rank=0):
     print("main")
     # load data and create slice_dataset
     ds_list = []
@@ -227,21 +231,15 @@ def main(nclasses, class_names, cp_paths, rank=0):
         _, test_f = PANNUKE_FOLDS[fold - 1]
         i = test_f + 1
         raw_fold = np.load(
-            os.path.join(
-                params["data_path_pannuke"], "images", "fold" + str(i), "images.npy"
-            ),
+            os.path.join(params["data_path"], "images", "fold" + str(i), "images.npy"),
             mmap_mode="r",
         )
         gt_fold = np.load(
-            os.path.join(
-                params["data_path_pannuke"], "masks", "fold" + str(i), "labels.npy"
-            ),
+            os.path.join(params["data_path"], "masks", "fold" + str(i), "labels.npy"),
             mmap_mode="r",
         )
         types_fold = np.load(
-            os.path.join(
-                params["data_path_pannuke"], "images", "fold" + str(i), "types.npy"
-            ),
+            os.path.join(params["data_path"], "images", "fold" + str(i), "types.npy"),
             mmap_mode="r",
         )
         ds_list.append(SliceDataset(raw=raw_fold, labels=gt_fold))
@@ -278,12 +276,7 @@ def main(nclasses, class_names, cp_paths, rank=0):
     for pth in cp_paths:
         checkpoint_path = f"{pth}/train/best_model"
         print(checkpoint_path)
-        with open(f"{pth}/params.toml", "r") as f:
-            enc = [
-                x.split('= "')[1].rstrip('"\n')
-                for x in f.readlines()
-                if x.startswith("encoder")
-            ][0]
+        enc = params["encoder"]
         model = get_model(
             enc=enc, out_channels_cls=nclasses + 1, out_channels_inst=5
         ).to(rank)
@@ -301,7 +294,7 @@ def main(nclasses, class_names, cp_paths, rank=0):
             models,
             dsname,
             cp_paths,
-            params["n_rounds"],
+            params,
             nclasses,
             class_names,
             rank,
@@ -322,36 +315,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     params = toml.load(f"{args.exp}/params.toml")
-
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("-fold", type=int, default=None, help="fold_id")
-    # parser.add_argument(
-    #     "-optimize", type=str, default="f1", help="one of [f1,mpq,r2,hd]"
-    # )
-    # parser.add_argument(
-    #     "-experiments", type=str, default=None, help="experiment ids separated by ,"
-    # )
-    # parser.add_argument(
-    #     "-tta", type=int, default=16, help="number of tta runs, default 16"
-    # )
-    # parser.add_argument(
-    #     "-n", type=int, default=5, help="number of runs to average results over"
-    # )
-    # parser.add_argument("--save", action="store_true", help="save predictions to disk")
-    # parser.add_argument(
-    #     "--pannuke", action="store_true", help="use pannuke instead of lizard"
-    # )
-    # args = parser.parse_args()
-
-    # params["optimize"] = args.1
-    # params["tta"] = int(args.tta)
-    # params["nrounds"] = int(args.n)
-    # params["save"] = args.save
-    # params["pannuke"] = args.pannuke
-    # print(args.fold)
-    # fold = None if args.fold is None else int(args.fold)
     params["experiment"] = "_".join(args.exp.split(","))
-    class_names = CLASS_NAMES_PANNUKE if params["pannuke"] else CLASS_NAMES
+    class_names = CLASS_NAMES_PANNUKE if params["dataset"] == "pannuke" else CLASS_NAMES
     rank = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     nclasses = 5 if params["dataset"] == "pannuke" else 7
-    main(nclasses, class_names, args.exp.split(","), rank)
+    main(nclasses, class_names, args.exp.split(","), params, rank)

@@ -56,7 +56,7 @@ def get_pannuke_pq(gt, pred, types=None):
         for future in concurrent.futures.as_completed(future_to_metrics):
             i_, mpq, pq = future.result()
             mPQ_all.append((i_, mpq))
-            bPQ_all.append((i, pq))
+            bPQ_all.append((i_, pq))
 
     mPQ_all = [x[1] for x in sorted(mPQ_all, key=lambda x: x[0])]
     bPQ_all = [x[1] for x in sorted(bPQ_all, key=lambda x: x[0])]
@@ -115,8 +115,8 @@ def get_pannuke_pq(gt, pred, types=None):
             # print("{} PQ: {} ".format(tissue_name, np.nanmean(tissue_PQ)))
             tissue_PQ_bin = [bPQ_each_image[i] for i in indices]
             # print("{} PQ binary: {} ".format(tissue_name, np.nanmean(tissue_PQ_bin)))
-            all_tissue_mPQ["tissue_name"] = np.nanmean(tissue_PQ)
-            all_tissue_bPQ["tissue_name"] = np.nanmean(tissue_PQ_bin)
+            all_tissue_mPQ[tissue_name] = np.nanmean(tissue_PQ)
+            all_tissue_bPQ[tissue_name] = np.nanmean(tissue_PQ_bin)
         # Show overall metrics - mPQ is average PQ over the classes and the tissues, bPQ is average binary PQ over the tissues
         at_mpq = np.nanmean(list(all_tissue_mPQ.values()))
         at_bpq = np.nanmean(list(all_tissue_bPQ.values()))
