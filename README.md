@@ -55,4 +55,4 @@ Data should always be in the same format, see convert_pannuke_to_conic.py.
 
 Please check the inference repository for WSI/large image inference:
 
-[hover-next inference repository](https://github.com/digitalpathologybern/hover_next_train)
+[hover-next inference repository](https://github.com/digitalpathologybern/hover_next_inference)
