@@ -53,7 +53,7 @@ TODO
 Multi-GPU / node training is supported via torchrun
 
 ```bash
-export APPTAINER_BIND="/storage:/storage" # make sure that your local FS is mounted
+export APPTAINER_BIND="/storage," # make sure that your local FS is mounted
 apptainer exec --nv nuc_torch_v16.sif \
     torchrun --standalone --nnodes=1 --nproc-per-node=1 train.py \
 	    --config "sample_configs/train_pannuke.toml"
