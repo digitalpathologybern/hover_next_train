@@ -15,7 +15,7 @@ import toml
 from src.spatial_augmenter import SpatialAugmenter
 from src.data_utils import SliceDataset, PANNUKE_FOLDS
 
-from src.color_conversion import color_augmentations
+from src.color_conversion import color_augmentations  # , get_normalize
 
 import json
 from tqdm.auto import tqdm
@@ -23,7 +23,7 @@ import pandas as pd
 import argparse
 
 torch.backends.cudnn.benchmark = True
-torch.manual_seed(420)
+torch.manual_seed(42)
 
 aug_params_slow = {
     "mirror": {"prob_x": 0.5, "prob_y": 0.5, "prob": 0.85},
@@ -36,9 +36,12 @@ aug_params_slow = {
 }
 
 
-def find_hyperparameters(ds, models, name, nclasses=7, class_names=CLASS_NAMES, rank=0):
+def find_hyperparameters(
+    ds, models, name, nclasses=7, class_names=CLASS_NAMES, rank=0, random_seed=42
+):
     color_aug_fn = color_augmentations(False, s=0.2, rank=rank)
-    aug = SpatialAugmenter(aug_params_slow)
+    # normalization = get_normalize(use_norm=params["dataset"] == "pannuke")
+    aug = SpatialAugmenter(aug_params_slow, random_seed=random_seed)
     data_loader = DataLoader(
         ds,
         batch_size=params["validation_batch_size"],
@@ -151,7 +154,13 @@ def main(nclasses, params, rank=0):
     print("evaluating for ", class_names, "on", ds_names)
     for ds, name in zip(ds_list, ds_names):
         find_hyperparameters(
-            ds, [model], name, nclasses=nclasses, class_names=class_names, rank=rank
+            ds,
+            [model],
+            name,
+            nclasses=nclasses,
+            class_names=class_names,
+            rank=rank,
+            random_seed=params["seed"],
         )
     print("done")
 

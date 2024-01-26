@@ -8,7 +8,7 @@ Contains necessary code to train and evaluate HoVer-NeXt on Lizard-Mitosis and P
 
 ### pre-requisites
 
-Setup the environment
+Setup the environment by running the following commands. Be careful to choose the right pytorch version for your installed CUDA Version.
 
 ```bash
 conda env create -f environment.yml
@@ -18,18 +18,30 @@ pip install torch==2.1.1 torchvision==0.16.1 --index-url https://download.pytorc
 
 download the necessary data
 
+lizard from here:
+
+And then download the additional mitosis predictions from here:
+
+merge and create folds using: TODO: merge_mitosis.py 
+
+
+pannuke from here:
+
+and convert using convert_pannuke_to_conic.py 
+
 training parameters are defined in a .toml file. Please check out the examples in the `sample_configs/` folder.
 
+### Train a model:
 To start the training run:
 
 ```bash
-python3 train.py --config "sample_configs/train_pannuke.toml"
+torchrun --standalone --nnodes=1 --nproc-per-node=1 train.py --config "sample_configs/train_pannuke.toml"
 ```
 
 There is no default logger so if you want to run this script in the background and monitor the log, run:
 
 ```bash
-python3 train.py --config "sample_configs/train_pannuke.toml" >train.log 2>&1 &
+torchrun --standalone --nnodes=1 --nproc-per-node=1 train.py --config "sample_configs/train_pannuke.toml" >train.log 2>&1 &
 ```
 
 

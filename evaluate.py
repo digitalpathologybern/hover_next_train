@@ -14,7 +14,7 @@ from src.post_proc_utils import prep_regression, evaluate, get_pp_params
 from src.spatial_augmenter import SpatialAugmenter
 from src.data_utils import SliceDataset
 from src.constants import CLASS_NAMES, CLASS_NAMES_PANNUKE, PANNUKE_FOLDS
-from src.color_conversion import color_augmentations
+from src.color_conversion import color_augmentations  # , get_normalize
 
 
 torch.backends.cudnn.benchmark = True
@@ -138,6 +138,10 @@ def process_and_save(res, out_p, dsname, tta, class_names=CLASS_NAMES):
         std_dict["old_metrics"].append(
             {"class": "all", "mpq": pq_s.tolist()[0], "r2": 0}
         )
+    print(
+        "saving to",
+        os.path.join(out_p, f"{dsname}_mean_metrics_tta_{tta}_n_{nrounds}.json"),
+    )
     with open(
         os.path.join(out_p, f"{dsname}_mean_metrics_tta_{tta}_n_{nrounds}.json"), "w"
     ) as f:
@@ -161,7 +165,7 @@ def evaluate_tile_dataset(
 ):
     color_aug_fn = color_augmentations(False, s=0.2, rank=rank)
     aug = SpatialAugmenter(aug_params_slow)
-
+    # normalization = get_normalize(use_norm=params["dataset"] == "pannuke")
     data_loader = DataLoader(
         ds,
         batch_size=params["validation_batch_size"],
@@ -182,7 +186,12 @@ def evaluate_tile_dataset(
         print(f"round {i}")
 
         pred_emb_list, pred_class_list, gt_list, raw_list = run_inference(
-            data_loader, models, aug, color_aug_fn, tta=params["tta"], rank=rank
+            data_loader,
+            models,
+            aug,
+            color_aug_fn,
+            tta=params["tta"],
+            rank=rank,
         )
         if i == 0:
             gt_regression = prep_regression(
@@ -313,9 +322,17 @@ if __name__ == "__main__":
         + "can be done with ensembles e.g, by specifying:"
         + " --exp test_experiment_1,test_experiment_2,test_experiment_3",
     )
+    parser.add_argument(
+        "--tta",
+        type=int,
+        default=16,
+        help="number of test time augmentation views",
+    )
+
     args = parser.parse_args()
     params = toml.load(f"{args.exp}/params.toml")
     params["experiment"] = "_".join(args.exp.split(","))
+    params["tta"] = int(args.tta)
     class_names = CLASS_NAMES_PANNUKE if params["dataset"] == "pannuke" else CLASS_NAMES
     rank = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     nclasses = 5 if params["dataset"] == "pannuke" else 7

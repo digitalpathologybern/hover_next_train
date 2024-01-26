@@ -1,7 +1,12 @@
 import torch
 import numpy as np
 from src.constants import RGB_FROM_HED, HED_FROM_RGB
-from torchvision.transforms.transforms import ColorJitter, RandomApply, GaussianBlur
+from torchvision.transforms.transforms import (
+    ColorJitter,
+    RandomApply,
+    GaussianBlur,
+    Normalize,
+)
 
 
 def torch_rgb2hed(img, hed_t, e):
@@ -104,3 +109,10 @@ def color_augmentations(train, sigma=0.05, bias=0.03, s=0.2, rank=0):
             HED_normalize_torch(sigma, bias, rank=rank)
         )
     return data_transforms
+
+
+def get_normalize(use_norm=True):
+    if use_norm:
+        return Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    else:
+        return lambda x: x

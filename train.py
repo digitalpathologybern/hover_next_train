@@ -1,35 +1,29 @@
 import os
-
-os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
-os.environ["OMP_NUM_THREADS"] = "4"
-# os.environ["NCCL_DEBUG"]="INFO"
-# os.environ["NCCL_DEBUG_SUBSYS"]="ALL"
-# os.environ["TORCH_DISTRIBUTED_DEBUG"]="INFO"
 import random
 import sys
 import argparse
-
 import toml
 import numpy as np
 import torch
 from torch.cuda.amp import GradScaler
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
-
-
-from src.color_conversion import color_augmentations
-
-from src.multi_head_unet import get_model, load_checkpoint
+from src.color_conversion import color_augmentations  # , get_normalize
+from src.multi_head_unet import get_model, load_checkpoint, freeze_enc, unfreeze_enc
 from src.spatial_augmenter import SpatialAugmenter
 from src.train_utils import (
     supervised_train_step,
     save_model,
-    get_inst_loss_fn,
+    InstanceLoss,
 )
 from src.validation import validation
 from src.data_utils import get_data
 from src.focal_loss import FocalLoss
 
+
+os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+#os.environ["OMP_NUM_THREADS"] = "16"
+random.seed(42)
 
 dist.init_process_group("nccl")
 torch.backends.cudnn.benchmark = True
@@ -68,7 +62,7 @@ def supervised_training(params):
         validation_loss.append(best_loss)
     model.train()
 
-    ddp_model = DDP(model)
+    ddp_model = DDP(model, find_unused_parameters=True)
 
     # setup training
     optimizer = torch.optim.AdamW(
@@ -91,14 +85,16 @@ def supervised_training(params):
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, T_max=params["training_steps"], eta_min=params["min_learning_rate"]
     )
+    # warmup_scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, 1.0 / 1000, 1.0)
     ce_loss_fn = FocalLoss(alpha=None, gamma=params["fl_gamma"], reduction="mean").to(
         rank
     )
-    inst_loss_fn = get_inst_loss_fn(params)
+    inst_loss_fn = InstanceLoss(params)
 
     # setup augmentation functions
     color_aug_fn = color_augmentations(True, s=params["color_scale"], rank=rank)
-    fast_aug = SpatialAugmenter(params["aug_params_fast"])
+    fast_aug = SpatialAugmenter(params["aug_params_fast"], random_seed=params["seed"])
+    # normalization = get_normalize(use_norm=params["dataset"] == "pannuke")
 
     # load data
     train_dataloaders, validation_dataloader, sz, dist_samp, class_names = get_data(
@@ -114,10 +110,17 @@ def supervised_training(params):
     # for debugging
     na_steps = []
 
+    # warmup
+    freeze_enc(ddp_model.module)
     # train loop
     while step < params["training_steps"]:
         train_loaders = [iter(x) for x in train_dataloaders]
+
         for _ in range(sz):
+            # stop warmup
+            if step == params["warmup_steps"]:
+                print("Warmup steps reached, unfreezing encoder weights...")
+                unfreeze_enc(ddp_model.module)
             # sample from the available datasets:
             raw, gt = next(train_loaders[random.randint(0, len(train_loaders) - 1)])
             step += 1
@@ -146,6 +149,9 @@ def supervised_training(params):
             torch.nn.utils.clip_grad_norm_(ddp_model.parameters(), 2.0)
             scaler.step(optimizer)
             scaler.update()
+            # if step < params["warmup_steps"]:
+            # warmup_scheduler.step()
+            # else:
             lr_scheduler.step()
 
             if step % (params["validation_step"] // world_size) == 0:

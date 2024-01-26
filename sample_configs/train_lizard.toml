@@ -22,7 +22,7 @@ training_steps = 200000
 validation_step = 1000
 checkpoint_step = 10000
 fl_gamma = 2
-loss_lambda = 0.1
+loss_lambda = 0.02
 
 # Evaluation parameters
 tta = 16
@@ -39,7 +39,7 @@ max_hole_size = 50
 # Experiment setup
 
 checkpoint_path = ""
-experiment = "convnextv2_tiny"
+experiment = "lizard_convnextv2_tinyv2"
 seed = 42
 fold = 0
 hard = true

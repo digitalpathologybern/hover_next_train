@@ -331,3 +331,13 @@ class MultiHeadModel(torch.nn.Module):
             masks.append(head(decoder_output))
 
         return torch.cat(masks, 1)
+
+
+def freeze_enc(model):
+    for p in model.encoder.parameters():
+        p.requires_grad = False
+
+
+def unfreeze_enc(model):
+    for p in model.encoder.parameters():
+        p.requires_grad = True

@@ -6,7 +6,6 @@ from tqdm.auto import tqdm
 def batch_pseudolabel_ensemb(raw, models, nviews, aug, color_aug_fn):
     tmp_3c_view = []
     tmp_ct_view = []
-
     # disable TTA
     if nviews < 1:
         out_fast = []
@@ -43,7 +42,8 @@ def run_inference(dataloader, models, aug, color_aug_fn, tta=16, rank=0):
     pred_class_list = []
     gt_list = []
     raw_list = []
-
+    # if normalization is None:
+    #     normalization = lambda x: x
     i = 0
     for raw, gt in tqdm(dataloader):
         raw = raw.to(rank).float()

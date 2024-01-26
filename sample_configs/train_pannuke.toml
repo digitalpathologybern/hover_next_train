@@ -15,12 +15,15 @@ batch_size = 24 # adjust depending on available GPU
 validation_batch_size = 64
 weight_decay = 0.0001
 learning_rate = 0.0001
-min_learning_rate = 1e-8
+min_learning_rate = 1e-7
 training_steps = 200000
 validation_step = 1000
 checkpoint_step = 10000
+warmup_steps = 10000
 fl_gamma = 2
 loss_lambda = 0.1
+label_smoothing = 0.1
+
 
 # Evaluation parameters
 tta = 16
@@ -37,7 +40,7 @@ max_hole_size = 128
 # Experiment setup
 
 checkpoint_path = ""
-experiment = "pannuke_convnextv2_tinyv2"
+experiment = "pannuke_convnextv2_tinyv5"
 seed = 42
 fold = 2
 test_as_val = false

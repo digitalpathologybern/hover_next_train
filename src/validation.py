@@ -1,7 +1,6 @@
 import numpy as np
 from tqdm.auto import tqdm
 from src.metrics import *
-from src.data_utils import center_crop
 import torch
 import torch.distributed as dist
 from src.metrics import calc_MPQ, per_tile_metrics, get_output
