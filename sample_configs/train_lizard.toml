@@ -29,9 +29,9 @@ tta = 16
 eval_optim_metric = "mpq"
 n_rounds = 5
 save = false # save final predictions on test set
-alt_metric_ccrop = 248
+f1_metric_ccrop = 248
 match_euc_dist = 6
-eval_criteria = "lizard|alt"
+eval_criteria = "lizard|f1"
 
 # Post-processing
 max_hole_size = 50

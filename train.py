@@ -22,7 +22,7 @@ from src.focal_loss import FocalLoss
 
 
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
-#os.environ["OMP_NUM_THREADS"] = "16"
+# os.environ["OMP_NUM_THREADS"] = "16"
 random.seed(42)
 
 dist.init_process_group("nccl")

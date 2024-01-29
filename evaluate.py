@@ -328,11 +328,22 @@ if __name__ == "__main__":
         default=16,
         help="number of test time augmentation views",
     )
+    parser.add_argument(
+        "--n_rounds",
+        type=int,
+        default=5,
+        help="average over n rounds",
+    )
+    
 
     args = parser.parse_args()
     params = toml.load(f"{args.exp}/params.toml")
     params["experiment"] = "_".join(args.exp.split(","))
     params["tta"] = int(args.tta)
+    if params["tta"] <= 0:
+        params["n_rounds"] = 1
+    else:
+        params["n_rounds"] = int(args.n_rounds)
     class_names = CLASS_NAMES_PANNUKE if params["dataset"] == "pannuke" else CLASS_NAMES
     rank = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     nclasses = 5 if params["dataset"] == "pannuke" else 7

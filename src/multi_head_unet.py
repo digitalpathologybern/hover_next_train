@@ -102,6 +102,10 @@ def get_model(
     out_channels_inst=5,
     pretrained=True,
 ):
+    pre_path = None
+    if type(pretrained) == str:
+        pre_path = pretrained
+        pretrained = False
     # small fix to deal with large pooling in convnext type models:
     depth = 4 if "next" in enc else 5
 
@@ -149,6 +153,13 @@ def get_model(
     decoders = [decoder_inst, decoder_ct]
     heads = [head_inst, head_ct]
     model = MultiHeadModel(encoder, decoders, heads)
+    if pre_path:
+        state_dict = torch.load(pre_path, map_location=f"cpu")["model_state_dict"]
+        new_state = model.state_dict()
+        for k, v in state_dict.items():
+            if k.startswith("encoder."):
+                new_state[k] = v
+        model.load_state_dict(new_state)
     return model
 
 

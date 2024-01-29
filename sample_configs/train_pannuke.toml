@@ -30,9 +30,9 @@ tta = 16
 eval_optim_metric = "pannuke"
 n_rounds = 5
 save = false # save final predictions on test set
-alt_metric_ccrop = 256
+f1_metric_ccrop = 256
 match_euc_dist = 12
-eval_criteria = "lizard|alt|pannuke"
+eval_criteria = "lizard|f1|pannuke"
 
 # Post-processing
 max_hole_size = 128

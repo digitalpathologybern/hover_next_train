@@ -183,7 +183,7 @@ def evaluate(
             save_path,
             criterium,
         )
-    elif criterium == "alt":
+    elif criterium == "f1":
         return alt_eval(
             params, gt_list, pred_list, class_names, nclasses, save_path, criterium
         )
@@ -203,9 +203,17 @@ def evaluate(
             ),
             pred_list,
             alt_eval(
-                params, gt_list, pred_list, class_names, nclasses, save_path, criterium
+                params,
+                gt_list,
+                pred_list,
+                class_names,
+                nclasses,
+                save_path,
+                criterium,
             ),
-            *pannuke_eval(gt_list, pred_list, types, criterium),
+            *pannuke_eval(
+                gt_list, pred_list, types, criterium, params["dataset"] == "lizard"
+            ),
         )
     else:
         raise NotImplementedError("metric variation not implemented")
@@ -245,7 +253,9 @@ def lizard_eval(
         }
 
 
-def pannuke_eval(gt_list, pred_list, types, criterium=None):
+def pannuke_eval(gt_list, pred_list, types, criterium=None, skip=False):
+    if skip:
+        return (None, None, None)
     _, pan_bpq, pan_pq_list, pan_tiss = get_pannuke_pq(gt_list, pred_list, types)
     if criterium == "all":
         return pan_bpq, pan_pq_list, pan_tiss
@@ -260,7 +270,7 @@ def pannuke_eval(gt_list, pred_list, types, criterium=None):
 def alt_eval(
     params, gt_list, pred_list, class_names, nclasses, save_path, criterium=None
 ):
-    ccrop = params["alt_metric_ccrop"]  # 256 if pannuke else 248
+    ccrop = params["f1_metric_ccrop"]  # 256 if pannuke else 248
     metrics = per_tile_metrics(
         crop(gt_list, ccrop, ccrop),
         crop(np.stack(pred_list, axis=0), ccrop, ccrop),
