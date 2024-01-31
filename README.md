@@ -1,6 +1,7 @@
 # HoVer-NeXt Training Repository
 
 Contains necessary code to train and evaluate HoVer-NeXt on Lizard-Mitosis and Pannuke.
+For inference, please check the [hover-next inference repository](https://github.com/digitalpathologybern/hover_next_inference)
 
 ## How to run
 
