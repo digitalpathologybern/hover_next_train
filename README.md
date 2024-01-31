@@ -68,3 +68,11 @@ Data should always be in the same format, see convert_pannuke_to_conic.py.
 Please check the inference repository for WSI/large image inference:
 
 [hover-next inference repository](https://github.com/digitalpathologybern/hover_next_inference)
+
+# License
+This repository is licensed under GNU General Public License v3.0. 
+If you are intending to use this repository for commercial usecases, please check the licenses of all python packages referenced in the Setup section / described in the requirements.txt and environment.yml.
+
+# Citation
+If you are using this repository, please cite:
+TODO
