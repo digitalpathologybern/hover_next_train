@@ -174,4 +174,8 @@ discard/*
 convnextv2_base_focal_fulldata_0/*
 convnextv2_large_focal_fulldata_0/*
 convnextv2_tiny_focal_fulldata_0/*
-
+pannuke_metrics_master/run.py
+pannuke_metrics_master/utils.py
+results_experiments/*
+calc_confusion_matrix.ipynb
+sample_configs/train_pannuke_fold1_pre.toml
