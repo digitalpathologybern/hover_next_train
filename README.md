@@ -17,18 +17,17 @@ conda activate hovernext
 pip install torch==2.1.1 torchvision==0.16.1 --index-url https://download.pytorch.org/whl/cu118
 ```
 
-download the necessary data
+#### Lizard-Mitosis training
+For Lizard-Mitosis and the mitosis data training, download the necessary data from [zenodo]()
+ (link is still missing)
 
-lizard from here:
+#### PanNuke training
+If available, download PanNuke from here: [TIA-Warwick](https://warwick.ac.uk/fac/cross_fac/tia/data/)
+and convert using convert_pannuke_to_conic.py like so:
 
-And then download the additional mitosis predictions from here:
-
-merge and create folds using: TODO: merge_mitosis.py 
-
-
-pannuke from here:
-
-and convert using convert_pannuke_to_conic.py 
+```bash
+python3 convert_pannuke_to_conic.py --path "/path-to/pannuke/masks/"
+```
 
 training parameters are defined in a .toml file. Please check out the examples in the `sample_configs/` folder.
 

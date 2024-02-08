@@ -1,5 +1,6 @@
-import numpy as np
 import os
+import argparse
+import numpy as np
 from scipy.ndimage import label
 
 # quick and dirty script to convert pannuke masks to lizard/conic format
@@ -8,7 +9,14 @@ from scipy.ndimage import label
 # the script will create a labels.npy file in each of the 3 subfolders
 
 if __name__ == "__main__":
-    path_to_pannuke = "pannuke/masks"
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--path",
+        type=str,
+        default="pannuke/masks",
+        help="specify the path to the pannuke masks folder",
+    )
+    path_to_pannuke = parser.parse_args().path
     for f in ["fold1", "fold2", "fold3"]:
         y = np.load(f"{path_to_pannuke}/{f}/masks.npy")
 
