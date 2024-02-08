@@ -1,4 +1,5 @@
 # Modified version of pannuke evaluation metrics
 
-original code: https://github.com/TissueImageAnalytics/PanNuke-metrics
-modified to include it for model selection during training
+The pannuke evaluation metrics do not have a license, and therefore cannot easily be included in another repository.
+To run PanNuke evaluation, please download the original code: https://github.com/TissueImageAnalytics/PanNuke-metrics
+and paste ```run.py``` and ```utils.py``` into this folder.
