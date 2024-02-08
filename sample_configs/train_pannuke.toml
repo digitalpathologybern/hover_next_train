@@ -40,7 +40,7 @@ max_hole_size = 128
 # Experiment setup
 
 checkpoint_path = ""
-experiment = "pannuke_convnextv2_tinyv5"
+experiment = "pannuke_convnextv2_tiny"
 seed = 42
 fold = 2
 test_as_val = false

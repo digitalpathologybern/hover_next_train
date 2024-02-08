@@ -33,7 +33,7 @@ and convert using convert_pannuke_to_conic.py
 training parameters are defined in a .toml file. Please check out the examples in the `sample_configs/` folder.
 
 ### Train a model:
-To start the training run:
+To start the training run the following, but make sure to view and modify the ```*.toml``` before.
 
 ```bash
 torchrun --standalone --nnodes=1 --nproc-per-node=1 train.py --config "sample_configs/train_pannuke.toml"
@@ -45,35 +45,53 @@ There is no default logger so if you want to run this script in the background a
 torchrun --standalone --nnodes=1 --nproc-per-node=1 train.py --config "sample_configs/train_pannuke.toml" >train.log 2>&1 &
 ```
 
+### Run hyperparameter search:
+
+After training a model, run hyperparamter search to find the best foreground and seed thresholds for watershed
+
+```bash
+python3 hp_search.py --config "your_experiment/params.toml"
+```
+
+### Run evaluation
+
+After hyperparamter search, model evaluation can be done via
+
+```bash
+python3 python3 evaluate.py --exp "your_experiment" --tta 16
+```
+
+This creates a new folder within the experiment folder that contains the experiment results.
 
 ### Singularity 
 
 A singularity container can be downloaded from here:
 TODO
 
-Multi-GPU / node training is supported via torchrun
+Multi-GPU / node training is supported via torchrun. The defined batch size in the ```*.toml``` is the batch size per gpu.
 
 ```bash
 export APPTAINER_BIND="/storage," # make sure that your local FS is mounted
 apptainer exec --nv nuc_torch_v16.sif \
-    torchrun --standalone --nnodes=1 --nproc-per-node=1 train.py \
+    torchrun --standalone --nnodes=1 --nproc-per-node=2 train.py \
 	    --config "sample_configs/train_pannuke.toml"
 ```
 
 ## Training on other datasets
 
 Follow along the pannuke code and replace hyperparameters and necessary preprocessing steps along the way.
-Data should always be in the same format, see convert_pannuke_to_conic.py.
+Data should always be in the same format, see ```convert_pannuke_to_conic.py.```
+
 ## Whole slide Inference
 
 Please check the inference repository for WSI/large image inference:
 
 [hover-next inference repository](https://github.com/digitalpathologybern/hover_next_inference)
 
-# License
+## License
 This repository is licensed under GNU General Public License v3.0. 
 If you are intending to use this repository for commercial usecases, please check the licenses of all python packages referenced in the Setup section / described in the requirements.txt and environment.yml.
 
-# Citation
+## Citation
 If you are using this repository, please cite:
 TODO

@@ -39,7 +39,7 @@ max_hole_size = 50
 # Experiment setup
 
 checkpoint_path = ""
-experiment = "lizard_convnextv2_tinyv2"
+experiment = "lizard_convnextv2_tiny"
 seed = 42
 fold = 0
 hard = true
