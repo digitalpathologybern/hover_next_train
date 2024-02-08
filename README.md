@@ -88,10 +88,24 @@ Please check the inference repository for WSI/large image inference:
 
 [hover-next inference repository](https://github.com/digitalpathologybern/hover_next_inference)
 
-## License
-This repository is licensed under GNU General Public License v3.0. 
+# License
+
+This repository is licensed under GNU General Public License v3.0 (See License Info).
 If you are intending to use this repository for commercial usecases, please check the licenses of all python packages referenced in the Setup section / described in the requirements.txt and environment.yml.
 
-## Citation
-If you are using this repository, please cite:
-TODO
+# Citation
+
+If you are using this code, please cite:
+```
+FULL VALIDATION PAPER CURRENTLY UNDER REVIEW AT MIDL2024
+```
+and
+```
+@INPROCEEDINGS{rumberger2022panoptic,
+  author={Rumberger, Josef Lorenz and Baumann, Elias and Hirsch, Peter and Janowczyk, Andrew and Zlobec, Inti and Kainmueller, Dagmar},
+  booktitle={2022 IEEE International Symposium on Biomedical Imaging Challenges (ISBIC)}, 
+  title={Panoptic segmentation with highly imbalanced semantic labels}, 
+  year={2022},
+  pages={1-4},
+  doi={10.1109/ISBIC56247.2022.9854551}}
+```
