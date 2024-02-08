@@ -305,10 +305,10 @@ def get_lizard(params):
     Mit_X_val = np.load(os.path.join(params["data_path_mit"], "valid_full_img.npy"))
 
     Mit_Y_train = add_3c_gt_fast(
-        np.load(os.path.join(params["hard_labels"], "train_full_lab.npy"))
+        np.load(os.path.join(params["data_path_mit"], "train_full_lab.npy"))
     )
     Mit_Y_val = add_3c_gt_fast(
-        np.load(os.path.join(params["hard_labels"], "valid_full_lab.npy"))
+        np.load(os.path.join(params["data_path_mit"], "valid_full_lab.npy"))
     )
 
     X_val = np.concatenate([Liz_X_val, Mit_X_val])

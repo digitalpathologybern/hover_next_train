@@ -1,8 +1,7 @@
 # Data parameters
 dataset = "lizard"
-data_path_liz = "/storage/research/pathology_tru/Elias/other_ds/lizard_5fold_strat_wmit/"
-data_path_mit = "/storage/research/pathology_tru/Elias/other_ds/mitosis_ds/"
-hard_labels = "/storage/research/pathology_tru/Elias/7class_dist/convnextv2_large_focal_0/"
+data_path_liz = "/path-to/lizard_mitosis/"
+data_path_mit = "/path-to/mitosis_ds/"
 
 # Model parameters
 encoder = "convnextv2_tiny.fcmae_ft_in22k_in1k" # encoder architecture to use, check 
@@ -42,8 +41,7 @@ checkpoint_path = ""
 experiment = "lizard_convnextv2_tiny"
 seed = 42
 fold = 0
-hard = true
-test_as_val = true
+test_as_val = false
 optim_metric = "mpq" # metric to optimize model for, one of [f1, mpq, pannuke]
 
 # Environment setup
