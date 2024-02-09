@@ -5,8 +5,6 @@ For inference, please check the [hover-next inference repository](https://github
 
 ## How to run
 
-
-
 ### pre-requisites
 
 Setup the environment by running the following commands. Be careful to choose the right pytorch version for your installed CUDA Version.
@@ -18,8 +16,8 @@ pip install torch==2.1.1 torchvision==0.16.1 --index-url https://download.pytorc
 ```
 
 #### Lizard-Mitosis training
-For Lizard-Mitosis and the mitosis data training, download the necessary data from [zenodo]()
- (link is still missing)
+For Lizard-Mitosis and the mitosis data training, download [lizard_mitosis.zip](https://zenodo.org/records/10636591/files/lizard_mitosis.zip?download=1) and [mitosis_ds.zip](https://zenodo.org/records/10636591/files/mitosis_ds.zip?download=1) from [zenodo](https://zenodo.org/records/10636591)
+and extract the folders.
 
 #### PanNuke training
 If available, download PanNuke from here: [TIA-Warwick](https://warwick.ac.uk/fac/cross_fac/tia/data/)
@@ -62,6 +60,12 @@ python3 python3 evaluate.py --exp "your_experiment" --tta 16
 
 This creates a new folder within the experiment folder that contains the experiment results.
 
+To run the eosinophil validation, download the [eos-val dataset](https://zenodo.org/records/10636591/files/eos_val.zip?download=1) and process it via the hover-next-inference pipeline. Afterwards run:
+
+```bash
+python3 python3 eos_eval.py --out "eos_results.csv" --root "/path-to-inference-results/" --val_root "/path-to/eos_val/"
+```
+
 ### Singularity 
 
 A singularity container can be downloaded from here:
@@ -80,6 +84,11 @@ apptainer exec --nv nuc_torch_v16.sif \
 
 Follow along the pannuke code and replace hyperparameters and necessary preprocessing steps along the way.
 Data should always be in the same format, see ```convert_pannuke_to_conic.py.```
+
+## Using HoVer-NeXt to finetune on other datasets
+
+Download a pre-trained checkpoint from [here](https://zenodo.org/records/10635618). 
+In the training config, you can specify a checkpoint to be loaded, select the downloaded and extracted ```best_model``` file.
 
 ## Whole slide Inference
 
