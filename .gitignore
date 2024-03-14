@@ -181,3 +181,11 @@ calc_confusion_matrix.ipynb
 sample_configs/train_pannuke_fold1_pre.toml
 eos_eval.ipynb
 test.png
+lizard_convnextv2_base_focalce_0/*
+lizard_convnextv2_large_focalce_0/*
+lizard_convnextv2_tiny_focalce_0/*
+lizard_convnextv2_large_focalce_nosamp_0/*
+lizard_convnextv2_large_nosamp_0/*
+pannuke_convnextv2_tiny_focalce_1/*
+pannuke_convnextv2_tiny_focalce_2/*
+pannuke_convnextv2_tiny_focalce_3/*

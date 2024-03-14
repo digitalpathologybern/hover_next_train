@@ -23,7 +23,8 @@ warmup_steps = 10000
 fl_gamma = 2
 loss_lambda = 0.1
 label_smoothing = 0.1
-
+use_weighted_sampling = true
+use_ema_loss = false
 
 # Evaluation parameters
 tta = 16
@@ -44,7 +45,7 @@ experiment = "pannuke_convnextv2_tiny"
 seed = 42
 fold = 2
 test_as_val = false
-optim_metric = "pannuke" # metric to optimize model for, one of [f1, mpq, pannuke]
+optim_metric = "pannuke" # metric to optimize model for, one of [f1, lizard, pannuke]
 
 # Environment setup
 

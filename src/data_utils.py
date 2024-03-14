@@ -318,11 +318,15 @@ def get_lizard(params):
     validation_dataset = SliceDataset(raw=X_val, labels=Y_val)
     mit_dataset = SliceDataset(raw=Mit_X_train, labels=Mit_Y_train)
     # mit_val_dataset = SliceDataset(raw=Mit_X_val, labels=Mit_Y_val)
+    
+    lab_sampler = get_weighted_sampler(labeled_dataset, classes=[0, 1, 2, 3, 4, 5, 6, 7]) if params["use_weighted_sampling"] else None
+    mit_sampler = get_weighted_sampler(mit_dataset, classes=[0, 1, 2, 3, 4, 5, 6, 7]) if params["use_weighted_sampling"] else None
     labeled_dataloader = DataLoader(
         labeled_dataset,
         batch_size=params["batch_size"],
         prefetch_factor=2,
-        sampler=get_weighted_sampler(labeled_dataset, classes=[0, 1, 2, 3, 4, 5, 6, 7]),
+        sampler=lab_sampler,
+        shuffle=lab_sampler is None,
         num_workers=params["num_workers"],
         pin_memory=True,
     )
@@ -331,7 +335,8 @@ def get_lizard(params):
         mit_dataset,
         batch_size=params["batch_size"],
         prefetch_factor=2,
-        sampler=get_weighted_sampler(mit_dataset, classes=[0, 1, 2, 3, 4, 5, 6, 7]),
+        sampler=mit_sampler,
+        shuffle=mit_sampler is None,
         num_workers=params["num_workers"],
         pin_memory=True,
     )

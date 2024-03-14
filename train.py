@@ -18,7 +18,7 @@ from src.train_utils import (
 )
 from src.validation import validation
 from src.data_utils import get_data
-from src.focal_loss import FocalLoss
+from src.focal_loss import FocalLoss, FocalCE
 
 
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
@@ -86,9 +86,13 @@ def supervised_training(params):
         optimizer, T_max=params["training_steps"], eta_min=params["min_learning_rate"]
     )
     # warmup_scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, 1.0 / 1000, 1.0)
-    ce_loss_fn = FocalLoss(alpha=None, gamma=params["fl_gamma"], reduction="mean").to(
-        rank
-    )
+    if params["use_ema_loss"]:
+        ce_loss_fn = FocalCE(num_classes=params["out_channels_cls"]).to(rank)
+    else:
+        ce_loss_fn = FocalLoss(alpha=None, gamma=params["fl_gamma"], reduction="mean").to(
+            rank
+        )
+    
     inst_loss_fn = InstanceLoss(params)
 
     # setup augmentation functions

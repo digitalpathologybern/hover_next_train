@@ -138,8 +138,8 @@ def main(nclasses, params, rank=0):
         class_names = CLASS_NAMES_PANNUKE
     else:
         # Mitosis dataset test set (real annotations)
-        x_mit_test = np.load(os.path.join(params["data_path_mit"], "test_img.npy"))
-        y_mit_test = np.load(os.path.join(params["data_path_mit"], "test_lab.npy"))
+        x_mit_test = np.load(os.path.join(params["data_path_mit"], "test_ds/test_img.npy"))
+        y_mit_test = np.load(os.path.join(params["data_path_mit"], "test_ds/test_lab.npy"))
 
         mit_test_ds = SliceDataset(raw=x_mit_test, labels=y_mit_test)
 

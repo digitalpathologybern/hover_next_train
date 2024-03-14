@@ -20,12 +20,16 @@ min_learning_rate = 1e-8
 training_steps = 200000
 validation_step = 1000
 checkpoint_step = 10000
+warmup_steps = 0
 fl_gamma = 2
 loss_lambda = 0.02
+label_smoothing = 0.0
+use_weighted_sampling = true
+use_ema_loss = false
 
 # Evaluation parameters
 tta = 16
-eval_optim_metric = "mpq"
+eval_optim_metric = "lizard"
 n_rounds = 5
 save = false # save final predictions on test set
 f1_metric_ccrop = 248
@@ -41,8 +45,8 @@ checkpoint_path = ""
 experiment = "lizard_convnextv2_tiny"
 seed = 42
 fold = 0
-test_as_val = false
-optim_metric = "mpq" # metric to optimize model for, one of [f1, mpq, pannuke]
+test_as_val = true
+optim_metric = "lizard" # metric to optimize model for, one of [f1, lizard, pannuke]
 
 # Environment setup
 

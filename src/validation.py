@@ -54,7 +54,7 @@ def validation(
     nclasses=7,
     class_names=CLASS_NAMES,
     use_amp=True,
-    metric="mpq",
+    metric="lizard",
 ):
     val_loss = []
     val_inst_loss = []
@@ -97,7 +97,7 @@ def validation(
     val_new = torch.mean(torch.stack(val_loss)) / world_size
     dist.all_reduce(val_new, op=dist.ReduceOp.SUM)
     print("Step: ", step)
-    if metric == "mpq":
+    if metric == "lizard":
         df, _ = calc_MPQ(pred_list, gt_list, nclasses)
         pq_p = torch.tensor(df["pq"][0]).to(device) / world_size
         mpq_p = torch.tensor(df["multi_pq+"][0]).to(device) / world_size
