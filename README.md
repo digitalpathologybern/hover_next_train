@@ -3,6 +3,8 @@
 Contains necessary code to train and evaluate HoVer-NeXt on Lizard-Mitosis and Pannuke.
 For inference, please check the [hover-next inference repository](https://github.com/digitalpathologybern/hover_next_inference)
 
+Find the Publication here: [https://openreview.net/pdf?id=3vmB43oqIO](https://openreview.net/pdf?id=3vmB43oqIO)
+
 ## How to run
 
 ### pre-requisites
@@ -68,14 +70,14 @@ python3 python3 eos_eval.py --out "eos_results.csv" --root "/path-to-inference-r
 
 ### Singularity 
 
-A singularity container can be downloaded from here:
-TODO
+Download the singularity image from [Zenodo](https://zenodo.org/records/10649470/files/hover_next.sif)
 
 Multi-GPU / node training is supported via torchrun. The defined batch size in the ```*.toml``` is the batch size per gpu.
 
 ```bash
-export APPTAINER_BIND="/storage," # make sure that your local FS is mounted
-apptainer exec --nv nuc_torch_v16.sif \
+# don't forget to mount your local directory
+export APPTAINER_BINDPATH="/storage"
+apptainer exec --nv /path-to-container/hover_next.sif \
     torchrun --standalone --nnodes=1 --nproc-per-node=2 train.py \
 	    --config "sample_configs/train_pannuke.toml"
 ```
@@ -105,7 +107,12 @@ If you are intending to use this repository for commercial usecases, please chec
 
 If you are using this code, please cite:
 ```
-FULL VALIDATION PAPER CURRENTLY UNDER REVIEW AT MIDL2024
+@inproceedings{baumann2024hover,
+  title={HoVer-NeXt: A Fast Nuclei Segmentation and Classification Pipeline for Next Generation Histopathology},
+  author={Baumann, Elias and Dislich, Bastian and Rumberger, Josef Lorenz and Nagtegaal, Iris D and Martinez, Maria Rodriguez and Zlobec, Inti},
+  booktitle={Medical Imaging with Deep Learning},
+  year={2024}
+}
 ```
 and
 ```
