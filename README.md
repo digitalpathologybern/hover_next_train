@@ -65,7 +65,7 @@ This creates a new folder within the experiment folder that contains the experim
 To run the eosinophil validation, download the [eos-val dataset](https://zenodo.org/records/10636591/files/eos_val.zip?download=1) and process it via the hover-next-inference pipeline. Afterwards run:
 
 ```bash
-python3 python3 eos_eval.py --out "eos_results.csv" --root "/path-to-inference-results/" --val_root "/path-to/eos_val/"
+python3 python3 holdout_eval.py --out "eos_results.csv" --root "/path-to-inference-results/" --val_root "/path-to/eos_val/"
 ```
 
 ### Singularity 
