@@ -80,19 +80,17 @@ def validation(
             val_loss.append(loss)
             val_inst_loss.append(instance_loss.item())
             val_ct_loss.append(class_loss.item())
-            out_ = out_.cpu().detach()
-            gt_b = gt_b.cpu().detach()
+        out_ = out_.cpu().detach().float()
+        gt_b = gt_b.cpu().detach()
 
-            for out, gt in zip(out_, gt_b):
-                out = out[None, :, :, :]
-                gt = gt[None, :, :, :]
-                pred_inst = out[:, :5]
-                pred_class = out[:, 5:]
-                pred = make_prediction(pred_inst, pred_class)
-                pred_list.append(pred)
-                gt_list.append(
-                    gt[:, :2].squeeze().permute(1, 2, 0).cpu().detach().numpy()
-                )
+        for out, gt in zip(out_, gt_b):
+            out = out[None, :, :, :]
+            gt = gt[None, :, :, :]
+            pred_inst = out[:, :5]
+            pred_class = out[:, 5:]
+            pred = make_prediction(pred_inst, pred_class)
+            pred_list.append(pred)
+            gt_list.append(gt[:, :2].squeeze().permute(1, 2, 0).cpu().detach().numpy())
 
     val_new = torch.mean(torch.stack(val_loss)) / world_size
     dist.all_reduce(val_new, op=dist.ReduceOp.SUM)
